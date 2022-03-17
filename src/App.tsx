@@ -7,16 +7,20 @@ import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import "./App.css";
 import { PageHealth } from "./page_health/PageHealth";
+import { PageMoney } from "./page_money/PageMoney";
 
 type bodyProps = {
   value: number;
 };
 
 const Body: FC<bodyProps> = ({ value }) => {
-  if (value == 0) {
-    return <PageHealth></PageHealth>;
+  switch (value) {
+    case 0:
+      return <PageHealth></PageHealth>;
+    case 1:
+      return <PageMoney></PageMoney>;
   }
-  return <p>Val {value}</p>;
+  return <p>404</p>;
 };
 
 function App() {

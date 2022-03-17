@@ -14,12 +14,8 @@ export function PageHealth() {
   const chart_props_fb: typeChartProps = {
     initial_labels: ["date", "pace", "distance"],
     y1formatter: {
-      pace: (sec) => {
-        console.log(sec);
-        return (
-          (sec - (sec %= 60)) / 60 + (9 < sec ? ":" : ":0") + Math.round(sec)
-        );
-      },
+      pace: (sec) =>
+        (sec - (sec %= 60)) / 60 + (9 < sec ? ":" : ":0") + Math.round(sec),
     },
   };
   return (
@@ -61,19 +57,15 @@ const ChartWrapper: FC<chartWrapperProps> = ({ api_name, db, chart_props }) => {
   return (
     <div>
       <div className="syncIcon">
-        {
-          <div>
-            <Zoom in={fetchStatus == 0} timeout={500}>
-              <SyncIcon color="action" />
-            </Zoom>
-            <Zoom in={fetchStatus == 1} timeout={500}>
-              <CheckCircleOutlineIcon color="success" />
-            </Zoom>
-            <Zoom in={fetchStatus == 2} timeout={500}>
-              <SyncDisabledIcon color="disabled" />
-            </Zoom>
-          </div>
-        }
+        <Zoom in={fetchStatus == 0} timeout={500}>
+          <SyncIcon color="action" />
+        </Zoom>
+        <Zoom in={fetchStatus == 1} timeout={500}>
+          <CheckCircleOutlineIcon color="success" />
+        </Zoom>
+        <Zoom in={fetchStatus == 2} timeout={500}>
+          <SyncDisabledIcon color="disabled" />
+        </Zoom>
       </div>
       <ChartMiBody data={table} chart_props={chart_props} />
     </div>
