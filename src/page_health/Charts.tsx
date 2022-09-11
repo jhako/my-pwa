@@ -11,20 +11,24 @@ import {
 } from "recharts";
 
 type scaleProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any[];
   chart_props: typeChartProps;
 };
 
 export type typeChartProps = {
   initial_labels: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   y1formatter?: { [key: string]: (y: any) => string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  filter?: (value: any) => boolean;
 };
 
 function to_mmdd(x: Date) {
   return [x.getMonth() + 1, x.getDate()].join("/ ");
 }
 
-export const ChartMiBody: FC<scaleProps> = ({ data, chart_props }) => {
+export const ChartHealth: FC<scaleProps> = ({ data, chart_props }) => {
   const [x_key, y1_key, y2_key] = chart_props.initial_labels;
   // Y2データラベル
   const [y2Key, setY2Key] = useState(y2_key);
@@ -40,7 +44,7 @@ export const ChartMiBody: FC<scaleProps> = ({ data, chart_props }) => {
   // X ticksの生成
   const ticks = useMemo(() => {
     const start_month = 1;
-    const end_month = 7;
+    const end_month = 12;
     const ticks = [];
     for (let m = start_month; m <= end_month; ++m) {
       ticks.push(new Date(`2022-${m}-01`).getTime());
@@ -48,10 +52,13 @@ export const ChartMiBody: FC<scaleProps> = ({ data, chart_props }) => {
     return ticks;
   }, []);
 
-  // 範囲外のデータを消す
+  // フィルタ
   const data_filtered = useMemo(
-    () => data.filter((item) => item["date"] >= ticks[0]),
-    [ticks, data]
+    () =>
+      data
+        .filter((item) => item["date"] >= ticks[0])
+        .filter(chart_props.filter ?? (() => true)),
+    [ticks, data, chart_props.filter]
   );
 
   return (

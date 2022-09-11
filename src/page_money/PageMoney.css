@@ -9,7 +9,15 @@
 }
 
 .syncIcon {
-  text-align: left;
+  justify-content: left;
   margin-top: 1rem;
   margin-left: 1rem;
+}
+
+.ratelink {
+  display: flex;
+  justify-content: right;
+  vertical-align: bottom;
+  font-size: 0.5rem;
+  margin-right: 1rem;
 }

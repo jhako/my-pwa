@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { moneyIndexedDB, MoneyTransaction, MoneyBalance0 } from "./IndexedDB";
+import { useState, useEffect } from "react";
+import {
+  moneyIndexedDB,
+  MoneyTransaction,
+  MoneyBalance0,
+} from "./MoneyIndexedDB";
 
 export interface MoneyTable {
   trans: Array<MoneyTransaction>;
