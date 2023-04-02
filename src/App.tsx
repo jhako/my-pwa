@@ -24,7 +24,7 @@ const Body: FC<bodyProps> = ({ value }) => {
 };
 
 function App() {
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(1);
 
   return (
     <div className="App">

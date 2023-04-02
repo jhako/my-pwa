@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useMemo } from "react";
 import {
   BarChart,
   Bar,
@@ -62,20 +62,19 @@ export const ChartStock: FC<chartStockProps> = ({ sc }) => {
 };
 
 const ChartProfit: FC<chartStockProps> = ({ sc }) => {
-  const [checked, setChecked] = React.useState(true);
+  const [checked_excgain, setCheckedExcGain] = React.useState(true);
+  const [x_range_day, setXRangeDay] = React.useState("183");
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setChecked(event.target.checked);
-  };
-
-  const xmin = new Date("2019-08-01").getTime(); //mc.date_from;
+  const xmin_limit = new Date("2019-08-01").getTime();
   const xmax = Date.now();
-  const num_x = 200;
+  const xrange_milli = Number.parseInt(x_range_day) * 86400000;
+  const xmin = Math.max(xmax - xrange_milli, xmin_limit);
+  const num_x = Math.min((xmax - xmin) / 86400000, 200);
   const dx = (xmax - xmin) / (num_x - 1);
   const xs = [...Array(num_x)].map((_, i) => xmin + i * dx);
-  const profits = get_stock_profits(sc, xs, checked);
 
   // 株価含み益データ
+  const profits = get_stock_profits(sc, xs, checked_excgain);
   const data = xs.map((x, i) => {
     const y: { [name: string]: number } = {};
     y["date"] = x;
@@ -89,6 +88,7 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
     y["exrate"] = sc.exrates[date2str(new Date(x))];
     return y;
   });
+
   // 符号入れ替わり時に0点を指すダミーデータを追加する
   for (const h of sc.holdings) {
     const plabel = h.label + "+";
@@ -130,10 +130,42 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
     "#9e9e9e",
   ];
 
+  const handleChangeToggle = (
+    event: React.MouseEvent<HTMLElement>,
+    value: string
+  ) => {
+    setXRangeDay(value);
+    //Number.parseInt(xrange)
+  };
+
+  const handleChangeCheckBoxExcGain = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setCheckedExcGain(event.target.checked);
+  };
+
   return (
     <div>
+      <ToggleButtonGroup
+        color="primary"
+        value={x_range_day}
+        exclusive
+        onChange={handleChangeToggle}
+        aria-label="Platform"
+      >
+        <ToggleButton value="7">1週間</ToggleButton>
+        <ToggleButton value="30">1ヶ月</ToggleButton>
+        <ToggleButton value="183">半年</ToggleButton>
+        <ToggleButton value="365">1年</ToggleButton>
+        <ToggleButton value="99999">すべて</ToggleButton>
+      </ToggleButtonGroup>
       <FormControlLabel
-        control={<Checkbox checked={checked} onChange={handleChange} />}
+        control={
+          <Checkbox
+            checked={checked_excgain}
+            onChange={handleChangeCheckBoxExcGain}
+          />
+        }
         label="為替差益あり"
       />
       <ResponsiveContainer width="95%" height={600}>
@@ -168,7 +200,7 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
                 type="monotone"
                 stackId={k}
                 dataKey={y_key + s}
-                dot={false}
+                dot={{ strokeWidth: 0, r: 2 }}
                 stroke={colors[idx]}
                 fill={colors[idx]}
                 key={y_key + s}
@@ -207,6 +239,7 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
             dataKey="exrate"
             name="JPY/USD"
             stroke="#82ca9d"
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
