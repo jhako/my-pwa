@@ -11,8 +11,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  Line,
+  LineChart,
 } from "recharts";
-import { StockCollection, get_jpy_rate } from "./StockCollection";
+import { StockCollection, get_jpy_rate, date2str } from "./StockCollection";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -68,11 +70,12 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
 
   const xmin = new Date("2019-08-01").getTime(); //mc.date_from;
   const xmax = Date.now();
-  const num_x = 100;
+  const num_x = 200;
   const dx = (xmax - xmin) / (num_x - 1);
   const xs = [...Array(num_x)].map((_, i) => xmin + i * dx);
   const profits = get_stock_profits(sc, xs, checked);
 
+  // 株価含み益データ
   const data = xs.map((x, i) => {
     const y: { [name: string]: number } = {};
     y["date"] = x;
@@ -83,6 +86,7 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
       const key = label + (profit > 0 ? "+" : "-");
       y[key] = profit;
     }
+    y["exrate"] = sc.exrates[date2str(new Date(x))];
     return y;
   });
   // 符号入れ替わり時に0点を指すダミーデータを追加する
@@ -132,14 +136,14 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
         control={<Checkbox checked={checked} onChange={handleChange} />}
         label="為替差益あり"
       />
-      <ResponsiveContainer width="95%" height={400}>
+      <ResponsiveContainer width="95%" height={600}>
         <AreaChart
           data={data}
           margin={{
             top: 10,
             right: 30,
             left: 30,
-            bottom: 0,
+            bottom: 10,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -177,6 +181,35 @@ const ChartProfit: FC<chartStockProps> = ({ sc }) => {
           <Legend />
         </AreaChart>
       </ResponsiveContainer>
+      <ResponsiveContainer width="95%" height={300}>
+        <LineChart
+          data={data}
+          margin={{
+            top: 10,
+            right: 30,
+            left: 30,
+            bottom: 10,
+          }}
+        >
+          <XAxis
+            dataKey="date"
+            tickFormatter={(date) => to_yymmdd(new Date(date))}
+          />
+          <YAxis domain={["auto", "auto"]} />
+          <Tooltip
+            labelFormatter={(date) => to_yymmdd(new Date(date))}
+            isAnimationActive={false}
+          />
+          <Legend />
+          <CartesianGrid strokeDasharray="3 3" />
+          <Line
+            type="monotone"
+            dataKey="exrate"
+            name="JPY/USD"
+            stroke="#82ca9d"
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };
@@ -201,7 +234,7 @@ function get_stock_profits(
         ? hld.acq_price * (hld.acq_rate / jpy_rate)
         : hld.acq_price;
       const profit =
-        x >= hld.start
+        hld.start <= x && x <= hld.end
           ? hld.amount * jpy_rate * (prices[k].value - base_price)
           : NaN;
       profits.push(profit);
@@ -264,7 +297,7 @@ const ChartDividends: FC<chartStockProps> = ({ sc }) => {
         <FormControlLabel value="half" control={<Radio />} label="半期" />
         <FormControlLabel value="rate" control={<Radio />} label="利回り" />
       </RadioGroup>
-      <ResponsiveContainer width="95%" height={400}>
+      <ResponsiveContainer width="95%" height={600}>
         <BarChart
           data={data}
           margin={{
@@ -353,7 +386,7 @@ function get_stock_dividends(sc: StockCollection, type: string) {
             : type === "rate"
             ? (val / prices[n].value) * 2 //半期を全期だと仮定
             : NaN;
-        const dividend = x >= hld.start ? y : NaN;
+        const dividend = hld.start <= x && x <= hld.end ? y : NaN;
         val_s.push(dividend);
       });
     }

@@ -1,3 +1,4 @@
+import { Checkbox, FormControlLabel } from "@mui/material";
 import React, { FC } from "react";
 import {
   AreaChart,
@@ -22,9 +23,15 @@ function to_yymmdd(x: Date) {
 }
 
 export const ChartAsset: FC<chartAssetProps> = ({ mc, sc }) => {
+  const [checked, setChecked] = React.useState(false);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChecked(event.target.checked);
+  };
+
   const xmin = new Date("2020-01-01").getTime(); //mc.date_from;
   const xmax = Date.now();
-  const num_x = 100;
+  const num_x = 200;
   const dx = (xmax - xmin) / (num_x - 1);
   const xs = [...Array(num_x)].map((_, i) => xmin + i * dx);
   const balances = get_money_series(mc, xs);
@@ -33,7 +40,12 @@ export const ChartAsset: FC<chartAssetProps> = ({ mc, sc }) => {
   const data = xs.map((x, i) => {
     const y: { [name: string]: number } = {};
     y["date"] = x;
-    for (const label in balances) y[label] = balances[label][i];
+    y["total"] = 0;
+    for (const label in balances) {
+      const val = balances[label][i];
+      y[label] = val;
+      y["total"] += val;
+    }
     for (const idx in stockvals) {
       if (isNaN(stockvals[idx][i])) {
         if (i + 1 < stockvals[idx].length && !isNaN(stockvals[idx][i + 1])) {
@@ -42,16 +54,20 @@ export const ChartAsset: FC<chartAssetProps> = ({ mc, sc }) => {
           continue;
         }
       } else {
-        y[sc.holdings[idx].label] = stockvals[idx][i];
+        const val = stockvals[idx][i];
+        y[sc.holdings[idx].label] = val;
+        y["total"] += val;
       }
     }
     return y;
   });
 
-  const y_keys: string[] = sc.holdings
-    .sort((a, b) => a.start - b.start)
-    .map((h) => h.label)
-    .concat(Object.keys(balances));
+  const y_keys: string[] = checked
+    ? ["total"]
+    : sc.holdings
+        .sort((a, b) => a.start - b.start)
+        .map((h) => h.label)
+        .concat(Object.keys(balances));
   const colors = [
     "#f44336",
     "#9c27b0",
@@ -76,7 +92,11 @@ export const ChartAsset: FC<chartAssetProps> = ({ mc, sc }) => {
 
   return (
     <div>
-      <ResponsiveContainer width="95%" height={400}>
+      <FormControlLabel
+        control={<Checkbox checked={checked} onChange={handleChange} />}
+        label="合計表示"
+      />
+      <ResponsiveContainer width="95%" height={600}>
         <AreaChart
           data={data}
           margin={{

@@ -15,10 +15,12 @@ export interface StockCollection {
   isUSD: { [code: string]: boolean };
 }
 
+export function date2str(date: Date) {
+  return date.toISOString().substring(0, 10);
+}
+
 export function get_jpy_rate(code: string, date: number, sc: StockCollection) {
-  return sc.isUSD[code]
-    ? sc.exrates[new Date(date).toISOString().substring(0, 10)]
-    : 1.0;
+  return sc.isUSD[code] ? sc.exrates[date2str(new Date(date))] : 1.0;
 }
 
 export function useStockCollection() {
@@ -80,7 +82,7 @@ export function useStockCollection() {
       const day = new Date();
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const dstr = day.toISOString().substring(0, 10);
+        const dstr = date2str(day);
         if (dstr in collection.exrates) break;
         collection.exrates[dstr] = tmp_rate;
         day.setDate(day.getDate() - 1);
@@ -96,7 +98,7 @@ export function useStockCollection() {
     const day = new Date();
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const dstr = day.toISOString().substring(0, 10);
+      const dstr = date2str(day);
       if (tmp_rate === null) {
         tmp_rate = collection.exrates[dstr];
       }
